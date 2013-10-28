@@ -17,6 +17,10 @@ import android.graphics.Point;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 public class MainActivity extends MapActivity {
@@ -43,7 +47,7 @@ public class MainActivity extends MapActivity {
 		return false;
 	}
 	
-	private class ConcreteOverlay extends Overlay
+	private class ConcreteOverlay extends Overlay implements OnClickListener
 	{
 		// 円の半径
 		private static final int CIRCLE_RADIUS = 16;
@@ -65,9 +69,48 @@ public class MainActivity extends MapActivity {
 			mCirclePaint.setARGB(255, 255, 0, 0);
 			
 			mGeocoder = new Geocoder(context, Locale.JAPAN);
+			
+			Button button = (Button)findViewById(R.id.Button01);
+			button.setOnClickListener(this);
 		}
 		
+		// ボタンが押された
+		public void onClick(View v)
+		{
+			switch (v.getId())
+			{
+			case R.id.Button01:
+				EditText editText = (EditText)findViewById(R.id.EditText01);
+				String text = editText.getText().toString();
+				
+				try {
+					List<Address> addressList = mGeocoder.getFromLocationName(text, 1);
+					if (addressList.size() > 0) {
+						Address address = addressList.get(0);
+						
+						setTapPoint(new GeoPoint((int)(address.getLatitude()*1E6), (int)(address.getLongitude()*1e6)));
+						
+						MapView mapView = (MapView)findViewById(R.id.MapView01);
+						mapView.getController().setCenter(mGeoPoint);
+						mapView.getController().setZoom(15);
+					}
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+
 		public boolean onTap(GeoPoint point, MapView mapView)
+		{
+			setTapPoint(point);
+			return super.onTap(point, mapView);
+		}
+		
+		public void setTapPoint(GeoPoint point)
 		{
 			mGeoPoint = point;
 			
@@ -110,7 +153,6 @@ public class MainActivity extends MapActivity {
 			} catch (Exception e) {
 				// TODO: handle exception
 			}
-			return super.onTap(point, mapView);
 		}
 		
 		public void draw(Canvas canvas, MapView mapView, boolean shadow)
